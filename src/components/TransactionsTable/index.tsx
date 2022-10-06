@@ -1,11 +1,31 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../../services/api";
 import { Container } from "./styles";
+import moment from "moment";
 
+interface Transactions {
+  id: number;
+  title: string;
+  amount: number;
+  type: string;
+  category: string;
+  createdAt: string;
+}
 export function TransactionsTable() {
+  const [transactions, setTransactions] = useState<Transactions[]>([]);
+
   useEffect(() => {
-    api("/transactions").then((response) => console.log(response?.data));
+    api("/transactions").then((response) =>
+      setTransactions(response?.data?.transactions)
+    );
   }, []);
+
+  const parseMoney = (value: number, currency?: string) => {
+    return Number(value).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: currency || "BRL",
+    });
+  };
 
   return (
     <Container>
@@ -19,30 +39,20 @@ export function TransactionsTable() {
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>Desenvolvimento de wbsite</td>
-            <td className="deposit">R$12.000</td>
-            <td>Desenvolvimento</td>
-            <td>20/09/2022</td>
-          </tr>
-          <tr>
-            <td>Aluguel</td>
-            <td className="withdraw">- R$1.200</td>
-            <td>Desenvolvimento</td>
-            <td>10/09/2022</td>
-          </tr>
-          <tr>
-            <td>NFT Monkey</td>
-            <td className="deposit">R$15.000</td>
-            <td>Desenvolvimento</td>
-            <td>05/09/2022</td>
-          </tr>
-          <tr>
-            <td>Contas</td>
-            <td className="withdraw">- R$5.200</td>
-            <td>Desenvolvimento</td>
-            <td>10/09/2022</td>
-          </tr>
+          {transactions.map((transaction) => {
+            return (
+              <tr key={transaction.id}>
+                <td>{transaction?.title}</td>
+                <td className={transaction?.type}>
+                  {parseMoney(transaction?.amount)}
+                </td>
+                <td>{transaction?.category}</td>
+                <td>
+                  {moment(transaction?.createdAt).format("DD-MM-YY hh:mm:ss")}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </Container>
